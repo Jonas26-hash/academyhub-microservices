@@ -12,6 +12,104 @@ services:
     volumes:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  registry-server:
+    build: ./ms-admin-registry-server
+    container_name: registry-server
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_HOST: registry-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  config-server:
+    build: ./ms-admin-config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_HOST: registry-server
+      CONFIG_LOCATION: file:/central-config/config-properties/
+    volumes:
+      - ./central-config:/central-config
+    depends_on:
+      registry-server:
+        condition: service_started
+
+  gateway:
+    build: ./ms-admin-api-gateway
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      EUREKA_HOST: registry-server
+      CONFIG_HOST: config-server
+    depends_on:
+      config-server:
+        condition: service_started
+      registry-server:
+        condition: service_started
+
+  instructor:
+    build: ./ms-gestion-instructor
+    container_name: instructor
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: postgres
+      EUREKA_HOST: registry-server
+      CONFIG_HOST: config-server
+    depends_on:
+      config-server:
+        condition: service_started
+      registry-server:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  alumno:
+    build: ./ms-gestion-alumno
+    container_name: alumno
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: postgres
+      EUREKA_HOST: registry-server
+      CONFIG_HOST: config-server
+    depends_on:
+      config-server:
+        condition: service_started
+      registry-server:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  taller:
+    build: ./ms-gestion-taller
+    container_name: taller
+    ports:
+      - "8083:8083"
+    environment:
+      DB_HOST: postgres
+      EUREKA_HOST: registry-server
+      CONFIG_HOST: config-server
+    depends_on:
+      config-server:
+        condition: service_started
+      registry-server:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

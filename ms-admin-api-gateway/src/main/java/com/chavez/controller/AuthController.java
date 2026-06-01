@@ -33,7 +33,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        Map<String, Object> resultado = authService.registrar(request.getUsername(), request.getPassword());
+        Map<String, Object> resultado = authService.registrar(request);
         if (resultado.containsKey("error")) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(resultado);
         }

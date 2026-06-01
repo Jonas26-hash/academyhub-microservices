@@ -23,6 +23,9 @@ public class Taller {
     @Column(name = "instructor_id", nullable = false)
     private Long instructorId;
 
+    @Column(nullable = false)
+    private Integer cupo = 30;
+
     public Taller() {}
 
     public Long getId() { return id; }
@@ -37,4 +40,6 @@ public class Taller {
     public void setFechaFin(LocalDate fechaFin) { this.fechaFin = fechaFin; }
     public Long getInstructorId() { return instructorId; }
     public void setInstructorId(Long instructorId) { this.instructorId = instructorId; }
+    public Integer getCupo() { return cupo; }
+    public void setCupo(Integer cupo) { this.cupo = cupo; }
 }

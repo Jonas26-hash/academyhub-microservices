@@ -66,4 +66,9 @@ public class TallerController {
     public ResponseEntity<List<Map<String, Object>>> obtenerAlumnos(@PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerAlumnosDelTaller(id));
     }
+
+    @GetMapping("/alumno/{alumnoId}")
+    public ResponseEntity<List<TallerDTO>> listarPorAlumno(@PathVariable Long alumnoId) {
+        return ResponseEntity.ok(service.listarPorAlumnoId(alumnoId));
+    }
 }

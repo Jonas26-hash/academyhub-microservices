@@ -3,6 +3,7 @@ package com.chavez.config;
 import com.chavez.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -25,6 +26,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/talleres/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/talleres").hasAnyRole("INSTRUCTOR", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/talleres/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/talleres/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/talleres/*/alumnos/*").hasAnyRole("ALUMNO", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/talleres/*/alumnos/*").hasAnyRole("ALUMNO", "ADMIN")
                 .requestMatchers(
                     "/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**",
                     "/actuator/**", "/health"

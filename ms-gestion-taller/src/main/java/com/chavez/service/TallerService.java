@@ -14,4 +14,5 @@ public interface TallerService {
     void desinscribirAlumno(Long tallerId, Long alumnoId);
     Map<String, Object> obtenerInstructorDelTaller(Long tallerId);
     List<Map<String, Object>> obtenerAlumnosDelTaller(Long tallerId);
+    List<TallerDTO> listarPorAlumnoId(Long alumnoId);
 }

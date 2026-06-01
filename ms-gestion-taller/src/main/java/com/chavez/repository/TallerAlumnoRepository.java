@@ -16,10 +16,16 @@ public interface TallerAlumnoRepository extends JpaRepository<TallerAlumno, Tall
     @Query("SELECT ta FROM TallerAlumno ta WHERE ta.taller.id = :tallerId")
     List<TallerAlumno> findByTallerId(@Param("tallerId") Long tallerId);
 
+    @Query("SELECT ta FROM TallerAlumno ta WHERE ta.id.alumnoId = :alumnoId")
+    List<TallerAlumno> findByAlumnoId(@Param("alumnoId") Long alumnoId);
+
     @Modifying
     @Query("DELETE FROM TallerAlumno ta WHERE ta.taller.id = :tallerId AND ta.id.alumnoId = :alumnoId")
     void deleteByTallerYAlumno(@Param("tallerId") Long tallerId, @Param("alumnoId") Long alumnoId);
 
     @Query("SELECT COUNT(ta) > 0 FROM TallerAlumno ta WHERE ta.taller.id = :tallerId AND ta.id.alumnoId = :alumnoId")
     boolean existsByTallerYAlumno(@Param("tallerId") Long tallerId, @Param("alumnoId") Long alumnoId);
+
+    @Query("SELECT COUNT(ta) FROM TallerAlumno ta WHERE ta.taller.id = :tallerId")
+    int countByTallerId(@Param("tallerId") Long tallerId);
 }

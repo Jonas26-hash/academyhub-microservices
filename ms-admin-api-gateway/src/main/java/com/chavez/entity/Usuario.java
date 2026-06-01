@@ -1,10 +1,13 @@
 package com.chavez.entity;
 
 import jakarta.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "usuarios")
 public class Usuario {
+
+    public static final Set<String> ROLES_VALIDOS = Set.of("ALUMNO", "INSTRUCTOR", "ADMIN");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,14 +20,17 @@ public class Usuario {
     private String password;
 
     @Column(nullable = false, length = 20)
-    private String rol = "USER";
+    private String rol = "ALUMNO";
 
     public Usuario() {}
 
     public Usuario(String username, String password, String rol) {
         this.username = username;
         this.password = password;
-        this.rol = rol;
+        if (!ROLES_VALIDOS.contains(rol.toUpperCase())) {
+            throw new IllegalArgumentException("Rol inv�lido: " + rol + ". V�lidos: " + ROLES_VALIDOS);
+        }
+        this.rol = rol.toUpperCase();
     }
 
     public Long getId() { return id; }
@@ -34,5 +40,5 @@ public class Usuario {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
     public String getRol() { return rol; }
-    public void setRol(String rol) { this.rol = rol; }
+    public void setRol(String rol) { this.rol = rol.toUpperCase(); }
 }

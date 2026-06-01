@@ -8,13 +8,14 @@ import com.chavez.feign.AlumnoFeignClient;
 import com.chavez.feign.InstructorFeignClient;
 import com.chavez.repository.TallerAlumnoRepository;
 import com.chavez.repository.TallerRepository;
-import com.chavez.service.SagaOrchestrator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class TallerServiceImpl implements TallerService {
@@ -75,6 +76,7 @@ public class TallerServiceImpl implements TallerService {
         taller.setFechaInicio(dto.getFechaInicio());
         taller.setFechaFin(dto.getFechaFin());
         taller.setInstructorId(dto.getInstructorId());
+        taller.setCupo(dto.getCupo());
         return toDTO(tallerRepository.save(taller));
     }
 
@@ -92,14 +94,25 @@ public class TallerServiceImpl implements TallerService {
     @Override
     @Transactional
     public void inscribirAlumno(Long tallerId, Long alumnoId) {
+        validarCupo(tallerId);
         sagaOrchestrator.inscribirAlumnoConSaga(tallerId, alumnoId);
+    }
+
+    private void validarCupo(Long tallerId) {
+        Taller taller = tallerRepository.findById(tallerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Taller no encontrado con id: " + tallerId));
+        int inscritos = tallerAlumnoRepository.countByTallerId(tallerId);
+        if (inscritos >= taller.getCupo()) {
+            throw new RuntimeException("Cupo lleno: el taller '" + taller.getNombre()
+                    + "' tiene cupo m�ximo de " + taller.getCupo() + " alumnos");
+        }
     }
 
     @Override
     @Transactional
     public void desinscribirAlumno(Long tallerId, Long alumnoId) {
         if (!tallerAlumnoRepository.existsByTallerYAlumno(tallerId, alumnoId)) {
-            throw new ResourceNotFoundException("El alumno no está inscrito en este taller");
+            throw new ResourceNotFoundException("El alumno no est� inscrito en este taller");
         }
         tallerAlumnoRepository.deleteByTallerYAlumno(tallerId, alumnoId);
     }
@@ -121,6 +134,15 @@ public class TallerServiceImpl implements TallerService {
                 .toList();
     }
 
+    @Override
+    public List<TallerDTO> listarPorAlumnoId(Long alumnoId) {
+        return tallerAlumnoRepository.findByAlumnoId(alumnoId).stream()
+                .map(ta -> tallerRepository.findById(ta.getId().getTallerId()).orElse(null))
+                .filter(t -> t != null)
+                .map(this::toDTO)
+                .toList();
+    }
+
     private TallerDTO toDTO(Taller taller) {
         TallerDTO dto = new TallerDTO();
         dto.setId(taller.getId());
@@ -128,11 +150,36 @@ public class TallerServiceImpl implements TallerService {
         dto.setDescripcion(taller.getDescripcion());
         dto.setFechaInicio(taller.getFechaInicio());
         dto.setFechaFin(taller.getFechaFin());
+        dto.setCupo(taller.getCupo());
         dto.setInstructorId(taller.getInstructorId());
 
         List<Long> alumnoIds = tallerAlumnoRepository.findByTallerId(taller.getId())
                 .stream().map(ta -> ta.getId().getAlumnoId()).toList();
         dto.setAlumnosIds(Set.copyOf(alumnoIds));
+
+        if (taller.getInstructorId() != null) {
+            try {
+                dto.setInstructor(instructorFeign.obtenerInstructor(taller.getInstructorId()));
+            } catch (Exception e) {
+                dto.setInstructor(Map.of("error", "Instructor no disponible"));
+            }
+        }
+
+        if (!alumnoIds.isEmpty()) {
+            try {
+                List<Map<String, Object>> alumnos = alumnoIds.stream()
+                        .<Map<String, Object>>map(id -> {
+                            try { return alumnoFeign.obtenerAlumno(id); }
+                            catch (Exception e) { return Map.of("id", (Object) id, "error", (Object) "No disponible"); }
+                        })
+                        .toList();
+                dto.setAlumnos(alumnos);
+            } catch (Exception e) {
+                dto.setAlumnos(List.of(Map.of("error", (Object) "Alumnos no disponibles")));
+            }
+        } else {
+            dto.setAlumnos(List.of());
+        }
 
         return dto;
     }
@@ -144,6 +191,7 @@ public class TallerServiceImpl implements TallerService {
         taller.setFechaInicio(dto.getFechaInicio());
         taller.setFechaFin(dto.getFechaFin());
         taller.setInstructorId(dto.getInstructorId());
+        taller.setCupo(dto.getCupo() != null ? dto.getCupo() : 30);
         return taller;
     }
 }

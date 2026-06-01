@@ -45,6 +45,10 @@ public class JwtUtil {
         return obtenerClaims(token).getSubject();
     }
 
+    public String obtenerRol(String token) {
+        return obtenerClaims(token).get("rol", String.class);
+    }
+
     private Claims obtenerClaims(String token) {
         return Jwts.parser()
                 .verifyWith(key)

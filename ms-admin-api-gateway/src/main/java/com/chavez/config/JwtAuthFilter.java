@@ -23,7 +23,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
 
-        if (path.equals("/api/auth/login")) {
+        if (path.equals("/api/auth/login") || path.equals("/api/auth/register")) {
             return chain.filter(exchange);
         }
 
@@ -40,6 +40,14 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
+
+        String username = jwtUtil.obtenerUsername(token);
+        String rol = jwtUtil.obtenerRol(token);
+
+        exchange = exchange.mutate()
+                .request(r -> r.header("X-User-Name", username)
+                               .header("X-User-Role", rol))
+                .build();
 
         return chain.filter(exchange);
     }

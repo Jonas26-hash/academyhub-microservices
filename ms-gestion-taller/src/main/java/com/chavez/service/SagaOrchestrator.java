@@ -48,6 +48,12 @@ public class SagaOrchestrator {
                 throw new RuntimeException("El alumno ya está inscrito en este taller");
             }
 
+            int inscritos = tallerAlumnoRepository.countByTallerId(tallerId);
+            if (inscritos >= taller.getCupo()) {
+                throw new RuntimeException("Cupo lleno: el taller '" + taller.getNombre()
+                        + "' tiene cupo máximo de " + taller.getCupo() + " alumnos");
+            }
+
             var alumnoData = alumnoFeign.obtenerAlumno(alumnoId);
             if (alumnoData == null || alumnoData.containsKey("error")) {
                 throw new RuntimeException("Alumno no válido o servicio no disponible");
