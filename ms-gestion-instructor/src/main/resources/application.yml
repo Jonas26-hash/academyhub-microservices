@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: ms-gestion-instructor
+  config:
+    import: configserver:http://localhost:8888
