@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16
@@ -54,6 +52,7 @@ services:
       DB_HOST: postgres
       EUREKA_HOST: registry-server
       CONFIG_HOST: config-server
+    restart: on-failure
     depends_on:
       config-server:
         condition: service_started
@@ -69,6 +68,7 @@ services:
       DB_HOST: postgres
       EUREKA_HOST: registry-server
       CONFIG_HOST: config-server
+    restart: on-failure
     depends_on:
       config-server:
         condition: service_started
@@ -86,6 +86,7 @@ services:
       DB_HOST: postgres
       EUREKA_HOST: registry-server
       CONFIG_HOST: config-server
+    restart: on-failure
     depends_on:
       config-server:
         condition: service_started
@@ -103,6 +104,7 @@ services:
       DB_HOST: postgres
       EUREKA_HOST: registry-server
       CONFIG_HOST: config-server
+    restart: on-failure
     depends_on:
       config-server:
         condition: service_started
