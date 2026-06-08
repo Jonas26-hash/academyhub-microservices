@@ -28,17 +28,20 @@ public class PdfExportService {
             table.setWidthPercentage(100);
             table.addCell("ID");
             table.addCell("Nombre");
-            table.addCell("Instructor ID");
+            table.addCell("Instructor");
             table.addCell("Cupo");
             table.addCell("Inscritos");
 
             for (TallerDTO t : talleres) {
                 table.addCell(String.valueOf(t.getId()));
                 table.addCell(t.getNombre());
-                table.addCell(String.valueOf(t.getInstructorId()));
+                String instrName = t.getInstructor() != null
+                        ? String.valueOf(t.getInstructor().getOrDefault("nombre", "N/A"))
+                        : "N/A";
+                table.addCell(instrName);
                 table.addCell(String.valueOf(t.getCupo()));
                 table.addCell(String.valueOf(
-                        t.getAlumnosIds() != null ? t.getAlumnosIds().size() : 0));
+                        t.getAlumnos() != null ? t.getAlumnos().size() : 0));
             }
 
             document.add(table);

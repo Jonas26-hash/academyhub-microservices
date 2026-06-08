@@ -11,11 +11,8 @@ import com.chavez.repository.TallerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class TallerServiceImpl implements TallerService {
@@ -56,14 +53,6 @@ public class TallerServiceImpl implements TallerService {
     public TallerDTO crear(TallerDTO dto) {
         Taller taller = toEntity(dto);
         Taller guardado = tallerRepository.save(taller);
-
-        if (dto.getAlumnosIds() != null) {
-            dto.getAlumnosIds().forEach(alumnoId -> {
-                TallerAlumno ta = new TallerAlumno(guardado, alumnoId);
-                tallerAlumnoRepository.save(ta);
-            });
-        }
-
         return toDTO(guardado);
     }
 
@@ -151,11 +140,9 @@ public class TallerServiceImpl implements TallerService {
         dto.setFechaInicio(taller.getFechaInicio());
         dto.setFechaFin(taller.getFechaFin());
         dto.setCupo(taller.getCupo());
-        dto.setInstructorId(taller.getInstructorId());
 
         List<Long> alumnoIds = tallerAlumnoRepository.findByTallerId(taller.getId())
                 .stream().map(ta -> ta.getId().getAlumnoId()).toList();
-        dto.setAlumnosIds(Set.copyOf(alumnoIds));
 
         if (taller.getInstructorId() != null) {
             try {

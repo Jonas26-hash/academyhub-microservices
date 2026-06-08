@@ -1,5 +1,6 @@
 package com.chavez.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +9,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -33,9 +33,9 @@ public class TallerDTO {
     private Integer cupo = 30;
 
     @NotNull(message = "El instructorId es obligatorio")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Long instructorId;
 
-    private Set<Long> alumnosIds;
     private Map<String, Object> instructor;
     private List<Map<String, Object>> alumnos;
 }
