@@ -1,6 +1,18 @@
-# Sistema de Gestión Académica - Microservicios
+# Sistema de Gestión Académica - AcademyHub
 
-Sistema de gestión de instructores, alumnos y talleres con Spring Boot 3.4.5, Spring Cloud 2024.0.3 y PostgreSQL 16.
+[![Java](https://img.shields.io/badge/Java-21-%23ED8B00?logo=openjdk&logoColor=white)](https://adoptium.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.5-%236DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Spring Cloud](https://img.shields.io/badge/Spring_Cloud-2024.0.3-%236DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-cloud)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-%23336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-✓-%232496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Swagger](https://img.shields.io/badge/Swagger-✓-%2385EA2D?logo=swagger&logoColor=black)](https://swagger.io/)
+[![Postman](https://img.shields.io/badge/Postman-Collection-%23FF6C37?logo=postman&logoColor=white)](Postman_AcademyHub.json)
+[![CI](https://img.shields.io/badge/CI-GitHub_Actions-%232088FF?logo=githubactions&logoColor=white)](.github/workflows/maven-ci.yml)
+[![License](https://img.shields.io/badge/License-MIT-%23A31F34)]()
+
+![AcademyHub](https://img.shields.io/badge/AcademyHub-Microservices-%236366F1?style=for-the-badge)
+
+Sistema de gestión académica basado en **microservicios** con Spring Boot 3.4.5, Spring Cloud 2024.0.3 y PostgreSQL 16. Incluye autenticación JWT, Circuit Breaker, Saga Pattern y control de acceso por roles.
 
 ## Arquitectura
 
@@ -8,120 +20,111 @@ Sistema de gestión de instructores, alumnos y talleres con Spring Boot 3.4.5, S
 [PostgreSQL 16]                     [6 Microservicios]
   ├── bd_instructor  ←→ ms-gestion-instructor (8081)
   ├── bd_alumno      ←→ ms-gestion-alumno (8082)
-  ├── bd_taller      ←→ ms-gestion-taller (8083)
+  ├── bd_taller      ←→ ms-gestion-taller  (8083)
   └── bd_gateway     ←→ ms-admin-api-gateway (8080)
 
 [Config Server]  (8888)  →  central-config/config-properties/
 [Registry Server] (8761)  →  Eureka Discovery
-[API Gateway]     (8080)  →  JWT + CB + Retry + RateLimiter + Audit
+[API Gateway]     (8080)  →  JWT + CB + Retry + RateLimiter + Swagger
 ```
+
+## Características
+
+| Característica        | Implementación |
+|-----------------------|----------------|
+| **JWT**               | Autenticación en dos capas (Gateway + microservicio) |
+| **Roles**             | ALUMNO / INSTRUCTOR / ADMIN con control granular |
+| **Circuit Breaker**   | Resilience4j en Feign + Gateway con fallback JSON |
+| **Rate Limiter**      | 100 requests/segundo por ruta |
+| **Retry**             | 3 reintentos ante errores 502/503 |
+| **Saga Pattern**      | Inscripción con compensación automática (saga_log) |
+| **DTO Validation**    | Jakarta Bean Validation con mensajes |
+| **Lombok**            | Código limpio sin boilerplate |
+| **Swagger UI**        | Documentación interactiva con autenticación JWT |
+| **Export PDF**        | Reporte de talleres descargable |
+| **Postman Collection**| Colección completa con tests para importar |
+| **CI/CD**             | GitHub Actions con build + test automáticos |
+| **Docker**            | Despliegue completo con docker-compose |
 
 ## Inicio rápido (Docker)
 
-**Solo necesitas Docker Desktop** — no necesitas Java ni Maven instalados.
-
 ```bash
-# Clonar y ejecutar
-git clone <repo>
-cd Jonas_EXAM
+# Solo necesitas Docker Desktop
+git clone https://github.com/Jonas26-hash/academyhub-microservices.git
+cd academyhub-microservices
 docker-compose up -d
 ```
 
-Esto arranca PostgreSQL + los 6 microservicios automáticamente.
+Verificar: [http://localhost:8761](http://localhost:8761) (Eureka Dashboard)
 
-Verificar: http://localhost:8761 (Eureka — todos los servicios deben estar UP)
+## Swagger UI
 
-Esperar ~30s después del primer `up` para que el Config Server cargue las propiedades.
+Cada microservicio expone su propia documentación interactiva:
 
-## Inicio rápido (local — sin Docker)
+| Servicio  | Swagger UI |
+|-----------|------------|
+| Gateway   | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) |
+| Instructor| [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html) |
+| Alumno    | [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html) |
+| Taller    | [http://localhost:8083/swagger-ui.html](http://localhost:8083/swagger-ui.html) |
 
-Requiere Java 21 + Maven 3.9+ + Docker (solo PostgreSQL).
+## Postman Collection
 
-```bash
-# Terminal 1: BD
-docker-compose up -d postgres
-
-# Terminal 2-7 (en orden):
-cd ms-admin-config-server  && mvn spring-boot:run
-cd ms-admin-registry-server && mvn spring-boot:run
-cd ms-admin-api-gateway     && mvn spring-boot:run
-cd ms-gestion-instructor    && mvn spring-boot:run
-cd ms-gestion-alumno        && mvn spring-boot:run
-cd ms-gestion-taller        && mvn spring-boot:run
-```
+Importa `Postman_AcademyHub.json` en Postman para tener todos los endpoints configurados con tests automáticos.
 
 ## Roles del sistema
 
-| Rol | Descripción |
-|-----|-------------|
-| `ALUMNO` | Puede consultar talleres e inscribirse/desinscribirse |
-| `INSTRUCTOR` | Puede crear, editar y eliminar talleres |
-| `ADMIN` | Acceso total a todo el sistema |
+| Rol         | Descripción |
+|-------------|-------------|
+| `ALUMNO`    | Consultar talleres, inscribirse/desinscribirse |
+| `INSTRUCTOR`| CRUD de talleres |
+| `ADMIN`     | Acceso total a todo el sistema |
 
 **Admin por defecto:** `admin` / `admin123` (se crea automáticamente al iniciar)
 
-## Endpoints (Gateway :8080)
+## Endpoints
 
-### Auth
+### Auth (públicos)
 | Método | Endpoint | Body |
 |--------|----------|------|
-| POST | `/api/auth/register` | `{"username":"x","password":"y","rol":"ALUMNO"}` |
-| POST | `/api/auth/login` | `{"username":"x","password":"y"}` |
+| POST | `/api/auth/register` | `{"username","password","rol"}` |
+| POST | `/api/auth/login` | `{"username","password"}` |
 
-Roles válidos: `ALUMNO`, `INSTRUCTOR`, `ADMIN` (default: `ALUMNO`)
-
-### Instructor
+### Instructores (autenticado)
 | Método | Endpoint |
 |--------|----------|
-| GET, POST | `/api/instructores` |
-| GET, PUT, DELETE | `/api/instructores/{id}` |
+| GET | `/api/instructores` |
+| GET | `/api/instructores/{id}` |
+| POST | `/api/instructores` |
+| PUT | `/api/instructores/{id}` |
+| DELETE | `/api/instructores/{id}` |
 
-### Alumno
+### Alumnos (autenticado)
 | Método | Endpoint |
 |--------|----------|
-| GET, POST | `/api/alumnos` |
-| GET, PUT, DELETE | `/api/alumnos/{id}` |
+| GET | `/api/alumnos` |
+| GET | `/api/alumnos/{id}` |
+| POST | `/api/alumnos` |
+| PUT | `/api/alumnos/{id}` |
+| DELETE | `/api/alumnos/{id}` |
 
-### Taller
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/talleres` | Listar todos |
-| GET | `/api/talleres/{id}` | Obtener por ID |
-| POST | `/api/talleres` | Crear (INSTRUCTOR/ADMIN) |
-| PUT | `/api/talleres/{id}` | Actualizar (INSTRUCTOR/ADMIN) |
-| DELETE | `/api/talleres/{id}` | Eliminar (INSTRUCTOR/ADMIN) |
-| POST | `/api/talleres/{id}/inscribir/{alumnoId}` | Inscribir alumno (ALUMNO/ADMIN) — valida cupo |
-| POST | `/api/talleres/{id}/desinscribir/{alumnoId}` | Desinscribir alumno (ALUMNO/ADMIN) |
-| GET | `/api/talleres/{id}/instructor` | Datos completos del instructor |
-| GET | `/api/talleres/{id}/alumnos` | Datos completos de los alumnos |
-| GET | `/api/talleres/alumno/{alumnoId}` | Talleres de un alumno |
+### Talleres
+| Método | Endpoint | Roles |
+|--------|----------|-------|
+| GET | `/api/talleres` | Autenticado |
+| GET | `/api/talleres/{id}` | Autenticado |
+| POST | `/api/talleres` | INSTRUCTOR, ADMIN |
+| PUT | `/api/talleres/{id}` | INSTRUCTOR, ADMIN |
+| DELETE | `/api/talleres/{id}` | INSTRUCTOR, ADMIN |
+| POST | `/api/talleres/{id}/alumnos/{alumnoId}` | ALUMNO, ADMIN |
+| DELETE | `/api/talleres/{id}/alumnos/{alumnoId}` | ALUMNO, ADMIN |
+| GET | `/api/talleres/{id}/instructor` | Autenticado |
+| GET | `/api/talleres/{id}/alumnos` | Autenticado |
+| GET | `/api/talleres/alumno/{alumnoId}` | Autenticado |
+| GET | `/api/talleres/export/pdf` | Autenticado |
 
-> Todos los endpoints requieren `Authorization: Bearer <token>` (excepto register/login)
+## Documentación completa
 
-## Características técnicas
+Visita la [documentación en Mintlify](https://academyhub-documentation.mintlify.app) para guías detalladas, diagramas de arquitectura y referencia completa de la API.
 
-| Característica | Implementación |
-|--------|---------------|
-| **JWT** | Autenticación en Gateway + cada microservicio |
-| **Roles** | ALUMNO / INSTRUCTOR / ADMIN con control por endpoint |
-| **Circuit Breaker** | Resilience4j en Feign clients + Gateway (fallback a JSON amigable) |
-| **Rate Limiter** | 100 requests/segundo por Gateway |
-| **Retry** | 3 reintentos automáticos ante errores 502/503 |
-| **Audit Log** | Cada request logueado con método, path, status, tiempo e IP |
-| **Saga Pattern** | Inscripción de alumnos con compensación automática (saga_log) |
-| **Cupo** | Los talleres tienen cupo máximo; se valida al inscribir |
-| **Token Propagation** | Feign propaga Bearer token entre microservicios |
 
-## Secuencia de prueba (Postman)
-
-```
-1. POST /api/auth/login  →  admin/admin123  →  obtienes token + rol ADMIN
-2. POST /api/instructores  →  creas instructor
-3. POST /api/auth/register  →  creas usuario ALUMNO
-4. Login como alumno → obtienes token
-5. POST /api/alumnos  →  creas alumno
-6. POST /api/talleres  →  {"nombre":"Álgebra","cupo":30,"instructorId":1}
-7. POST /api/talleres/1/inscribir/1  →  saga inscribe (o "Cupo lleno")
-8. GET  /api/talleres/alumno/1  →  talleres del alumno
-9. Detener ms-gestion-alumno → probar Circuit Breaker → fallback JSON
-```

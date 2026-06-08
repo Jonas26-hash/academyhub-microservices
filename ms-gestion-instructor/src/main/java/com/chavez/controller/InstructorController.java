@@ -2,6 +2,7 @@ package com.chavez.controller;
 
 import com.chavez.dto.InstructorDTO;
 import com.chavez.service.InstructorService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +30,12 @@ public class InstructorController {
     }
 
     @PostMapping
-    public ResponseEntity<InstructorDTO> crear(@RequestBody InstructorDTO dto) {
+    public ResponseEntity<InstructorDTO> crear(@Valid @RequestBody InstructorDTO dto) {
         return new ResponseEntity<>(service.crear(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<InstructorDTO> actualizar(@PathVariable Long id, @RequestBody InstructorDTO dto) {
+    public ResponseEntity<InstructorDTO> actualizar(@PathVariable Long id, @Valid @RequestBody InstructorDTO dto) {
         return ResponseEntity.ok(service.actualizar(id, dto));
     }
 

@@ -41,13 +41,7 @@ public class AuthService {
         String rol = request.getRol().toUpperCase();
 
         if (!Usuario.ROLES_VALIDOS.contains(rol)) {
-            return Map.of("error", "Rol inválido. Válidos: " + Usuario.ROLES_VALIDOS);
-        }
-        if (username.length() < 3) {
-            return Map.of("error", "El username debe tener al menos 3 caracteres");
-        }
-        if (request.getPassword().length() < 4) {
-            return Map.of("error", "La contraseña debe tener al menos 4 caracteres");
+            return Map.of("error", "Rol inv\u00e1lido. V\u00e1lidos: " + Usuario.ROLES_VALIDOS);
         }
         if (usuarioRepository.existsByUsername(username)) {
             return Map.of("error", "El usuario ya existe");

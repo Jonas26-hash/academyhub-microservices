@@ -1,10 +1,16 @@
 package com.chavez.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "taller")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Taller {
 
     @Id
@@ -25,21 +31,4 @@ public class Taller {
 
     @Column(nullable = false)
     private Integer cupo = 30;
-
-    public Taller() {}
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-    public LocalDate getFechaInicio() { return fechaInicio; }
-    public void setFechaInicio(LocalDate fechaInicio) { this.fechaInicio = fechaInicio; }
-    public LocalDate getFechaFin() { return fechaFin; }
-    public void setFechaFin(LocalDate fechaFin) { this.fechaFin = fechaFin; }
-    public Long getInstructorId() { return instructorId; }
-    public void setInstructorId(Long instructorId) { this.instructorId = instructorId; }
-    public Integer getCupo() { return cupo; }
-    public void setCupo(Integer cupo) { this.cupo = cupo; }
 }

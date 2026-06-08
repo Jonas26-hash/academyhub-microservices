@@ -1,9 +1,13 @@
 package com.chavez.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "taller_alumno")
+@Getter @Setter @NoArgsConstructor
 public class TallerAlumno {
 
     @EmbeddedId
@@ -14,15 +18,8 @@ public class TallerAlumno {
     @JoinColumn(name = "taller_id")
     private Taller taller;
 
-    public TallerAlumno() {}
-
     public TallerAlumno(Taller taller, Long alumnoId) {
         this.taller = taller;
         this.id = new TallerAlumnoId(taller.getId(), alumnoId);
     }
-
-    public TallerAlumnoId getId() { return id; }
-    public void setId(TallerAlumnoId id) { this.id = id; }
-    public Taller getTaller() { return taller; }
-    public void setTaller(Taller taller) { this.taller = taller; }
 }

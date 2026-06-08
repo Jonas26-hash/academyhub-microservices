@@ -2,6 +2,7 @@ package com.chavez.controller;
 
 import com.chavez.dto.AlumnoDTO;
 import com.chavez.service.AlumnoService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +30,12 @@ public class AlumnoController {
     }
 
     @PostMapping
-    public ResponseEntity<AlumnoDTO> crear(@RequestBody AlumnoDTO dto) {
+    public ResponseEntity<AlumnoDTO> crear(@Valid @RequestBody AlumnoDTO dto) {
         return new ResponseEntity<>(service.crear(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AlumnoDTO> actualizar(@PathVariable Long id, @RequestBody AlumnoDTO dto) {
+    public ResponseEntity<AlumnoDTO> actualizar(@PathVariable Long id, @Valid @RequestBody AlumnoDTO dto) {
         return ResponseEntity.ok(service.actualizar(id, dto));
     }
 

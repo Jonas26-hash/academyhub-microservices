@@ -1,0 +1,69 @@
+name: AcademyHub CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Java 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Create databases
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE bd_instructor;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE bd_alumno;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE bd_taller;"
+        PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE bd_gateway;"
+
+    - name: Build and test all modules
+      run: |
+        for dir in ms-admin-config-server ms-admin-registry-server ms-admin-api-gateway ms-gestion-instructor ms-gestion-alumno ms-gestion-taller; do
+          echo "=== Building $dir ==="
+          cd $dir
+          mvn clean compile -DskipTests --no-transfer-progress
+          cd ..
+        done
+
+    - name: Run unit tests
+      run: |
+        for dir in ms-gestion-instructor ms-gestion-alumno ms-gestion-taller; do
+          echo "=== Testing $dir ==="
+          cd $dir
+          mvn test --no-transfer-progress
+          cd ..
+        done
+
+    - name: Package all
+      run: |
+        for dir in ms-admin-config-server ms-admin-registry-server ms-admin-api-gateway ms-gestion-instructor ms-gestion-alumno ms-gestion-taller; do
+          echo "=== Packaging $dir ==="
+          cd $dir
+          mvn package -DskipTests --no-transfer-progress
+          cd ..
+        done

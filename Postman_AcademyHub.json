@@ -1,0 +1,467 @@
+{
+  "info": {
+    "name": "AcademyHub API",
+    "description": "Colecci\u00f3n completa para probar el sistema de gesti\u00f3n acad\u00e9mica AcademyHub.\n\n## Flujo recomendado:\n1. Ejecutar \"Login Admin\" para obtener token\n2. Crear Instructor\n3. Crear Alumno\n4. Crear Taller (requiere INSTRUCTOR/ADMIN)\n5. Inscribir Alumno en Taller (Saga Pattern)\n6. Probar consultas GET\n7. Probar PDF export\n8. Probar errores y validaciones",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080/api" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('token', jsonData.token);",
+                  "pm.test('Login exitoso', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(jsonData.token).to.not.be.empty;",
+                  "  pm.expect(jsonData.rol).to.eql('ADMIN');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Registrar ALUMNO",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alumno_test\",\n  \"password\": \"123456\",\n  \"rol\": \"ALUMNO\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Registrar INSTRUCTOR",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"instructor_test\",\n  \"password\": \"123456\",\n  \"rol\": \"INSTRUCTOR\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Register - Error usuario duplicado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\",\n  \"rol\": \"ALUMNO\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Register - Error validaci\u00f3n username corto",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ab\",\n  \"password\": \"123456\",\n  \"rol\": \"ALUMNO\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login como ALUMNO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Login ALUMNO exitoso', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(jsonData.rol).to.eql('ALUMNO');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alumno_test\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - Error credenciales inv\u00e1lidas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"wrong\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Instructores",
+      "item": [
+        {
+          "name": "Crear Instructor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos\",\n  \"apellido\": \"Lopez\",\n  \"email\": \"carlos@mail.com\",\n  \"telefono\": \"999888777\",\n  \"especialidad\": \"Matem\u00e1ticas\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/instructores", "host": ["{{base_url}}"], "path": ["instructores"] }
+          }
+        },
+        {
+          "name": "Listar Instructores",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Lista de instructores', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/instructores", "host": ["{{base_url}}"], "path": ["instructores"] }
+          }
+        },
+        {
+          "name": "Obtener Instructor por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/instructores/1", "host": ["{{base_url}}"], "path": ["instructores", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar Instructor",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos Updated\",\n  \"apellido\": \"Lopez\",\n  \"email\": \"carlos.updated@mail.com\",\n  \"telefono\": \"999888777\",\n  \"especialidad\": \"F\u00edsica\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/instructores/1", "host": ["{{base_url}}"], "path": ["instructores", "1"] }
+          }
+        },
+        {
+          "name": "Crear Instructor - Error email inv\u00e1lido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"apellido\": \"Test\",\n  \"email\": \"email-invalido\",\n  \"especialidad\": \"Test\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/instructores", "host": ["{{base_url}}"], "path": ["instructores"] }
+          }
+        },
+        {
+          "name": "Eliminar Instructor",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/instructores/99", "host": ["{{base_url}}"], "path": ["instructores", "99"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alumnos",
+      "item": [
+        {
+          "name": "Crear Alumno",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Maria\",\n  \"apellido\": \"Garcia\",\n  \"email\": \"maria@mail.com\",\n  \"telefono\": \"777666555\",\n  \"fechaNacimiento\": \"2000-05-15\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/alumnos", "host": ["{{base_url}}"], "path": ["alumnos"] }
+          }
+        },
+        {
+          "name": "Listar Alumnos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Lista de alumnos', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/alumnos", "host": ["{{base_url}}"], "path": ["alumnos"] }
+          }
+        },
+        {
+          "name": "Obtener Alumno por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/alumnos/1", "host": ["{{base_url}}"], "path": ["alumnos", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar Alumno",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Maria Updated\",\n  \"apellido\": \"Garcia\",\n  \"email\": \"maria.updated@mail.com\",\n  \"telefono\": \"777666555\",\n  \"fechaNacimiento\": \"2000-05-15\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/alumnos/1", "host": ["{{base_url}}"], "path": ["alumnos", "1"] }
+          }
+        },
+        {
+          "name": "Eliminar Alumno (no existente - error)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/alumnos/99", "host": ["{{base_url}}"], "path": ["alumnos", "99"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Talleres",
+      "item": [
+        {
+          "name": "Crear Taller (INSTRUCTOR/ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\u00c1lgebra Lineal\",\n  \"descripcion\": \"Curso b\u00e1sico de \u00e1lgebra lineal\",\n  \"fechaInicio\": \"2025-06-01\",\n  \"fechaFin\": \"2025-08-01\",\n  \"cupo\": 30,\n  \"instructorId\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/talleres", "host": ["{{base_url}}"], "path": ["talleres"] }
+          }
+        },
+        {
+          "name": "Listar Talleres (enriquecido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Lista de talleres enriquecidos', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/talleres", "host": ["{{base_url}}"], "path": ["talleres"] }
+          }
+        },
+        {
+          "name": "Obtener Taller por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/talleres/1", "host": ["{{base_url}}"], "path": ["talleres", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar Taller (INSTRUCTOR/ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\u00c1lgebra Avanzada\",\n  \"descripcion\": \"Curso avanzado\",\n  \"fechaInicio\": \"2025-07-01\",\n  \"fechaFin\": \"2025-09-01\",\n  \"cupo\": 25,\n  \"instructorId\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/talleres/1", "host": ["{{base_url}}"], "path": ["talleres", "1"] }
+          }
+        },
+        {
+          "name": "Inscribir Alumno en Taller (Saga)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Inscripci\u00f3n con Saga', () => {",
+                  "  if (pm.response.code === 201) {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "  } else {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.not.be.empty;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/talleres/1/alumnos/1", "host": ["{{base_url}}"], "path": ["talleres", "1", "alumnos", "1"] }
+          }
+        },
+        {
+          "name": "Inscribir mismo alumno (error - ya inscrito)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/talleres/1/alumnos/1", "host": ["{{base_url}}"], "path": ["talleres", "1", "alumnos", "1"] }
+          }
+        },
+        {
+          "name": "Obtener Instructor del Taller",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/talleres/1/instructor", "host": ["{{base_url}}"], "path": ["talleres", "1", "instructor"] }
+          }
+        },
+        {
+          "name": "Obtener Alumnos del Taller",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/talleres/1/alumnos", "host": ["{{base_url}}"], "path": ["talleres", "1", "alumnos"] }
+          }
+        },
+        {
+          "name": "Talleres de un Alumno",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/talleres/alumno/1", "host": ["{{base_url}}"], "path": ["talleres", "alumno", "1"] }
+          }
+        },
+        {
+          "name": "Exportar PDF de Talleres",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Exportar PDF', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/pdf');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/talleres/export/pdf", "host": ["{{base_url}}"], "path": ["talleres", "export", "pdf"] }
+          }
+        },
+        {
+          "name": "Desinscribir Alumno de Taller",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/talleres/1/alumnos/1", "host": ["{{base_url}}"], "path": ["talleres", "1", "alumnos", "1"] }
+          }
+        },
+        {
+          "name": "Eliminar Taller (INSTRUCTOR/ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/talleres/1", "host": ["{{base_url}}"], "path": ["talleres", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pruebas de Error y Seguridad",
+      "item": [
+        {
+          "name": "GET sin token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Sin token devuelve 401', () => {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": { "raw": "{{base_url}}/talleres", "host": ["{{base_url}}"], "path": ["talleres"] }
+          }
+        },
+        {
+          "name": "Crear Taller con token ALUMNO (403)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test\",\n  \"cupo\": 10,\n  \"instructorId\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/talleres", "host": ["{{base_url}}"], "path": ["talleres"] }
+          }
+        },
+        {
+          "name": "404 - Instructor no existe",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/instructores/999", "host": ["{{base_url}}"], "path": ["instructores", "999"] }
+          }
+        },
+        {
+          "name": "404 - Taller no existe",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/talleres/999", "host": ["{{base_url}}"], "path": ["talleres", "999"] }
+          }
+        }
+      ]
+    }
+  ]
+}

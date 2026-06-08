@@ -4,6 +4,7 @@ import com.chavez.dto.LoginRequest;
 import com.chavez.dto.LoginResponse;
 import com.chavez.dto.RegisterRequest;
 import com.chavez.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
             LoginResponse response = authService.login(request.getUsername(), request.getPassword());
             return ResponseEntity.ok(response);
@@ -32,7 +33,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         Map<String, Object> resultado = authService.registrar(request);
         if (resultado.containsKey("error")) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(resultado);

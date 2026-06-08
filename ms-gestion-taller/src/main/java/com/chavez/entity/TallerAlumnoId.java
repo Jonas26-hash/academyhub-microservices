@@ -1,10 +1,16 @@
 package com.chavez.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class TallerAlumnoId implements Serializable {
 
     @Column(name = "taller_id")
@@ -12,18 +18,6 @@ public class TallerAlumnoId implements Serializable {
 
     @Column(name = "alumno_id")
     private Long alumnoId;
-
-    public TallerAlumnoId() {}
-
-    public TallerAlumnoId(Long tallerId, Long alumnoId) {
-        this.tallerId = tallerId;
-        this.alumnoId = alumnoId;
-    }
-
-    public Long getTallerId() { return tallerId; }
-    public void setTallerId(Long tallerId) { this.tallerId = tallerId; }
-    public Long getAlumnoId() { return alumnoId; }
-    public void setAlumnoId(Long alumnoId) { this.alumnoId = alumnoId; }
 
     @Override
     public boolean equals(Object o) {
