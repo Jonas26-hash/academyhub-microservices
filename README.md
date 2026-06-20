@@ -125,6 +125,6 @@ Importa `Postman_AcademyHub.json` en Postman para tener todos los endpoints conf
 
 ## Documentación completa
 
-Visita la [documentación en Mintlify](https://academyhub-documentation.mintlify.app) para guías detalladas, diagramas de arquitectura y referencia completa de la API.
+Visita la [documentación en Mintlify](https://techtonicdev.mintlify.app/) para guías detalladas, diagramas de arquitectura y referencia completa de la API.
 
 
